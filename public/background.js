@@ -10,39 +10,33 @@
   const preload=urls.map(src=>new Promise(resolve=>{const im=new Image();im.onload=()=>resolve(src);im.onerror=()=>resolve(src);im.src=src;}));
   const shuffle=a=>a.slice().sort(()=>Math.random()-.5);
   Promise.all(preload).then(()=>{
-    let pool=shuffle(urls);
-    let step=0;
-    const positions=[
-      {top:'3%',left:'2%',width:'40%',height:'44%',transform:'rotate(-2deg)'},
-      {top:'4%',right:'2%',width:'40%',height:'43%',transform:'rotate(2deg)'},
-      {top:'29%',left:'-4%',width:'38%',height:'45%',transform:'rotate(1deg)'},
-      {top:'27%',right:'-4%',width:'39%',height:'46%',transform:'rotate(-1deg)'},
-      {bottom:'3%',left:'3%',width:'40%',height:'44%',transform:'rotate(2deg)'},
-      {bottom:'3%',right:'3%',width:'40%',height:'44%',transform:'rotate(-2deg)'},
-      {top:'8%',left:'31%',width:'38%',height:'39%',transform:'rotate(-1deg)'},
-      {bottom:'7%',left:'30%',width:'39%',height:'39%',transform:'rotate(1deg)'},
-      {top:'12%',left:'7%',width:'35%',height:'41%',transform:'rotate(-3deg)'},
-      {top:'10%',right:'7%',width:'35%',height:'41%',transform:'rotate(3deg)'},
-      {bottom:'10%',left:'8%',width:'34%',height:'40%',transform:'rotate(3deg)'},
-      {bottom:'9%',right:'8%',width:'34%',height:'40%',transform:'rotate(-3deg)'}
+    let pool=shuffle(urls),step=0,lastPosition=-1;
+    const desktop=[
+      {top:'1%',left:'0%',width:'43%',height:'47%',transform:'rotate(-1.5deg)'},{top:'1%',right:'0%',width:'43%',height:'47%',transform:'rotate(1.5deg)'},{bottom:'1%',left:'0%',width:'43%',height:'47%',transform:'rotate(1.5deg)'},{bottom:'1%',right:'0%',width:'43%',height:'47%',transform:'rotate(-1.5deg)'},{top:'25%',left:'-5%',width:'39%',height:'50%',transform:'rotate(-1deg)'},{top:'25%',right:'-5%',width:'39%',height:'50%',transform:'rotate(1deg)'}
     ];
-    const applyPosition=(tile,p)=>{
-      tile.style.top=p.top||'auto';tile.style.bottom=p.bottom||'auto';tile.style.left=p.left||'auto';tile.style.right=p.right||'auto';tile.style.width=p.width;tile.style.height=p.height;tile.style.transform=p.transform;
-    };
+    const mobile=[
+      {top:'0%',left:'-8%',width:'62%',height:'31%',transform:'rotate(-1deg)'},{top:'0%',right:'-8%',width:'62%',height:'31%',transform:'rotate(1deg)'},{top:'23%',left:'-9%',width:'61%',height:'32%',transform:'rotate(1deg)'},{top:'23%',right:'-9%',width:'61%',height:'32%',transform:'rotate(-1deg)'},{bottom:'0%',left:'-8%',width:'62%',height:'32%',transform:'rotate(1deg)'},{bottom:'0%',right:'-8%',width:'62%',height:'32%',transform:'rotate(-1deg)'},{top:'12%',left:'20%',width:'60%',height:'31%',transform:'rotate(-1deg)'},{bottom:'10%',left:'20%',width:'60%',height:'31%',transform:'rotate(1deg)'}
+    ];
+    const isMobile=()=>window.innerWidth<=600;
+    const getPositions=()=>isMobile()?mobile:desktop;
+    const applyPosition=(tile,p)=>{tile.style.top=p.top||'auto';tile.style.bottom=p.bottom||'auto';tile.style.left=p.left||'auto';tile.style.right=p.right||'auto';tile.style.width=p.width;tile.style.height=p.height;tile.style.transform=p.transform};
     const show=(tile,src,p)=>{applyPosition(tile,p);tile.style.setProperty('--photo',`url("${src}")`);tile.querySelector('img').src=src;tile.classList.add('visible')};
     const nextUnique=()=>{if(!pool.length)pool=shuffle(urls);return pool.pop()};
-    const firstPositions=shuffle(positions).slice(0,4);
-    tiles.forEach((tile,i)=>show(tile,nextUnique(),firstPositions[i]));
-    let lastPosition=-1;
+    const initial=getPositions();
+    shuffle(initial).slice(0,4).forEach((p,i)=>show(tiles[i],nextUnique(),p));
     setInterval(()=>{
-      const tile=tiles[step%4];
+      const tile=tiles[step%4],positions=getPositions();
       let posIndex=Math.floor(Math.random()*positions.length);
-      while(posIndex===lastPosition)posIndex=Math.floor(Math.random()*positions.length);
+      while(posIndex===lastPosition&&positions.length>1)posIndex=Math.floor(Math.random()*positions.length);
       lastPosition=posIndex;
       const src=nextUnique();
       tile.classList.remove('visible');
       setTimeout(()=>show(tile,src,positions[posIndex]),420);
       step++;
     },1800);
+    window.addEventListener('resize',()=>{
+      const positions=getPositions();
+      tiles.forEach((tile,i)=>applyPosition(tile,positions[i%positions.length]));
+    });
   });
 })();
