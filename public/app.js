@@ -1,0 +1,2 @@
+const $=s=>document.querySelector(s);const msg=t=>$('#msg').textContent=t;
+$('#login').addEventListener('submit',async e=>{e.preventDefault();msg('');const r=await fetch('/api/login',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({username:$('#user').value.trim(),password:$('#pass').value})});const d=await r.json().catch(()=>({}));if(!r.ok){msg(d.error||'No fue posible ingresar.');return}location.href=d.role==='admin'?'/admin.html':'/participante.html'});
