@@ -8,15 +8,28 @@
   document.body.prepend(collage);
   const tiles=[...collage.querySelectorAll('.photo-tile')];
   const preload=urls.map(src=>new Promise(resolve=>{const im=new Image();im.onload=()=>resolve(src);im.onerror=()=>resolve(src);im.src=src;}));
+  const shuffle=a=>a.slice().sort(()=>Math.random()-.5);
   Promise.all(preload).then(()=>{
-    const show=(tile,src)=>{tile.style.setProperty('--photo',`url("${src}")`);tile.querySelector('img').src=src;tile.classList.add('visible')};
-    tiles.forEach((tile,i)=>show(tile,urls[i]));
-    let step=4;
+    let pool=shuffle(urls);
+    let step=0;
+    const positions=[
+      {top:'4%',left:'3%',width:'39%',height:'42%',transform:'rotate(-2deg)'},
+      {top:'8%',right:'3%',width:'38%',height:'40%',transform:'rotate(2deg)'},
+      {bottom:'5%',left:'6%',width:'37%',height:'43%',transform:'rotate(2deg)'},
+      {bottom:'4%',right:'6%',width:'38%',height:'42%',transform:'rotate(-2deg)'}
+    ];
+    const applyPosition=(tile,p)=>{
+      tile.style.top=p.top||'auto';tile.style.bottom=p.bottom||'auto';tile.style.left=p.left||'auto';tile.style.right=p.right||'auto';tile.style.width=p.width;tile.style.height=p.height;tile.style.transform=p.transform;
+    };
+    const show=(tile,src,p)=>{applyPosition(tile,p);tile.style.setProperty('--photo',`url("${src}")`);tile.querySelector('img').src=src;tile.classList.add('visible')};
+    const nextUnique=()=>{if(!pool.length)pool=shuffle(urls);return pool.pop()};
+    tiles.forEach((tile,i)=>show(tile,nextUnique(),positions[i]));
     setInterval(()=>{
-      const tile=tiles[(step-4)%4];
-      const src=urls[step%urls.length];
+      const tile=tiles[step%4];
+      const position=positions[Math.floor(Math.random()*positions.length)];
+      const src=nextUnique();
       tile.classList.remove('visible');
-      setTimeout(()=>show(tile,src),420);
+      setTimeout(()=>show(tile,src,position),420);
       step++;
     },1800);
   });
